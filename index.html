@@ -22,6 +22,7 @@
   .card { padding: 12px; background: white; border: 1px solid #dbe3ec; border-radius: 10px; }
   .card img { width: 100%; height: 100px; object-fit: contain; display: block; border-radius: 5px; }
   .card strong { display: block; margin: 10px 2px 2px; }
+  .card small { display: block; margin: 0 2px; color: #4b6076; }
 </style>
 </head>
 <body>
@@ -56,6 +57,7 @@
   const vendorFunction = document.getElementById('function');
   const directory = document.getElementById('directory');
   const results = document.getElementById('results');
+  const categoryLabels = new Map(categories.map(([slug, label]) => [slug, label]));
   const vendorCategories = new Map();
 
   for (const [slug, label, vendors] of categories) {
@@ -101,9 +103,12 @@
     logo.alt = '';
     const title = document.createElement('strong');
     title.textContent = name;
-    card.append(logo, title);
+    const tags = vendorCategories.get(name);
+    const details = document.createElement('small');
+    details.textContent = `(${tags.map((tag) => categoryLabels.get(tag)).join(', ')})`;
+    card.append(logo, title, details);
     directory.append(card);
-    return { card, tags: vendorCategories.get(name) };
+    return { card, tags };
   });
 
   function applyFilters() {
