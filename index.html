@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tools &amp; Software Directory Demo</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f5f7fa; color: #172436; font: 16px/1.5 system-ui, sans-serif; }
+  .wrap { width: min(1120px, calc(100% - 40px)); margin-inline: auto; }
+  header { background: #112337; color: white; padding: 44px 0; border-bottom: 4px solid #2db8a0; }
+  h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.12; letter-spacing: -.035em; }
+  header p { color: #c7d7e6; margin: 12px 0 0; }
+  main { padding-block: 28px 60px; }
+  #tools-filters { display: flex; flex-wrap: wrap; gap: 12px 20px; }
+  label { display: grid; gap: 4px; font-weight: 600; max-width: 100%; }
+  select { font: inherit; font-weight: 400; padding: 8px 12px; border: 1px solid #bac7d5; border-radius: 6px; color: inherit; background: white; max-width: 100%; }
+  select:focus-visible { outline: 3px solid #087469; outline-offset: 3px; }
+  #results { color: #4b6076; font-size: .875rem; margin: 16px 0 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 12px; list-style: none; padding: 0; margin: 16px 0 0; }
+  .card[hidden] { display: none; }
+  .card { padding: 12px; background: white; border: 1px solid #dbe3ec; border-radius: 10px; }
+  .card img { width: 100%; height: 100px; object-fit: contain; display: block; border-radius: 5px; }
+  .card strong { display: block; margin: 10px 2px 2px; }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Third-Party Tools &amp; Software</h1>
+  <p>Browse fictional vendors by market segment or function.</p>
+</div></header>
+<main class="wrap">
+  <div id="tools-filters" role="group" aria-label="Filter tools by category">
+    <label>Market segment
+      <select id="market"><option value="">All markets</option></select>
+    </label>
+    <label>Function
+      <select id="function"><option value="">All functions</option></select>
+    </label>
+  </div>
+  <p id="results" role="status"></p>
+  <ul id="directory" class="grid"></ul>
+</main>
+<script>
+  const categories = [
+    ['automotive', 'Automotive', ['Axle Logic', 'Vector Forge', 'Road Signal', 'Torque Labs']],
+    ['iot', 'Internet of Things', ['Mesh Harbor', 'Field Relay', 'Edge Foundry', 'Node Atlas']],
+    ['audio', 'Voice & Audio', ['Echo Circuit', 'Wave Pilot', 'Tone Bridge', 'Signal Grove']],
+    ['ml', 'Machine Learning', ['Tensor Field', 'Edge Foundry', 'Model Junction', 'Pixel Current']],
+    ['security', 'Security', ['Cipher Works', 'Trust Relay', 'Guard Stack', 'Key Harbor']],
+    ['dev', 'Development Tools', ['Vector Forge', 'Build Circuit', 'Trace Point', 'Compile Works']],
+    ['os', 'Operating Systems & Drivers', ['Kernel North', 'Node Atlas', 'Runtime Labs', 'Driver Grove']]
+  ];
+
+  const market = document.getElementById('market');
+  const vendorFunction = document.getElementById('function');
+  const directory = document.getElementById('directory');
+  const results = document.getElementById('results');
+  const vendorCategories = new Map();
+
+  for (const [slug, label, vendors] of categories) {
+    const select = ['dev', 'os'].includes(slug) ? vendorFunction : market;
+    select.add(new Option(label, slug));
+
+    for (const name of vendors) {
+      if (!vendorCategories.has(name)) vendorCategories.set(name, []);
+      vendorCategories.get(name).push(slug);
+    }
+  }
+
+  const vendorNames = [...vendorCategories.keys()].sort((a, b) => a.localeCompare(b));
+
+  function mockLogo(name) {
+    const index = vendorNames.indexOf(name);
+    const hue = (index * 47 + 160) % 360;
+    const canvas = document.createElement('canvas');
+    canvas.width = 440;
+    canvas.height = 200;
+    const context = canvas.getContext('2d');
+    context.fillStyle = `hsl(${hue} 46% 94%)`;
+    context.fillRect(0, 0, 440, 200);
+    context.fillStyle = `hsl(${hue} 60% 29%)`;
+    context.save();
+    context.translate(220, 100);
+    context.rotate((index % 3 - 1) * Math.PI / 8);
+    context.fillRect(-51, -51, 102, 102);
+    context.restore();
+    context.font = 'bold 40px system-ui';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillStyle = 'white';
+    context.fillText(name.split(' ').map((word) => word[0]).join(''), 220, 100);
+    return canvas.toDataURL();
+  }
+
+  const cards = vendorNames.map((name) => {
+    const card = document.createElement('li');
+    card.className = 'card';
+    const logo = document.createElement('img');
+    logo.src = mockLogo(name);
+    logo.alt = '';
+    const title = document.createElement('strong');
+    title.textContent = name;
+    card.append(logo, title);
+    directory.append(card);
+    return { card, tags: vendorCategories.get(name) };
+  });
+
+  function applyFilters() {
+    const selected = [market.value, vendorFunction.value].filter(Boolean);
+    let count = 0;
+
+    for (const { card, tags } of cards) {
+      card.hidden = !selected.every((tag) => tags.includes(tag));
+      if (!card.hidden) count++;
+    }
+
+    results.textContent = count === 0
+      ? 'No vendors match these filters.'
+      : `${count} ${count === 1 ? 'vendor' : 'vendors'}`;
+  }
+
+  market.addEventListener('change', applyFilters);
+  vendorFunction.addEventListener('change', applyFilters);
+  applyFilters();
+</script>
+</body>
+</html>
